@@ -6,6 +6,10 @@ pub enum SudokuError {
     Invalid,
     #[error("unsolvable sudoku")]
     Unsolvable,
+    #[error("outside sudoku bounds")]
+    OutsideBounds,
+    #[error("conflicting cells")]
+    ConflictingCells,
 }
 
 #[derive(Copy, Clone)]
@@ -37,7 +41,7 @@ impl Sudoku {
                     continue;
                 }
 
-                let cell_box = 3 * (row / 3) + col / 3;
+                let cell_box = Self::get_cell_box(row, col)?;
 
                 // Update map of values
                 rows[row] |= 1 << cell;
@@ -54,9 +58,45 @@ impl Sudoku {
         })
     }
 
+    fn get_cell_box(row: usize, col: usize) -> Result<usize, SudokuError> {
+        if row >= 9 || col >= 9 {
+            return Err(SudokuError::OutsideBounds);
+        }
+
+        Ok(3 * (row / 3) + col / 3)
+    }
+
+    fn try_put_cell(&mut self, row: usize, col: usize, value: u32) -> Result<(), SudokuError> {
+        if value > 9 {
+            return Err(SudokuError::Invalid);
+        }
+
+        // Check row
+        if self.rows[row] & 1 << value != 0 {
+            return Err(SudokuError::ConflictingCells);
+        }
+
+        // Check col
+        if self.cols[col] & 1 << value != 0 {
+            return Err(SudokuError::ConflictingCells);
+        }
+
+        // Check box
+        let cell_box = Self::get_cell_box(row, col)?;
+        if self.boxes[cell_box] & 1 << value != 0 {
+            return Err(SudokuError::ConflictingCells);
+        }
+
+        self.cells[row][col] = value;
+        self.rows[row] |= 1 << value;
+        self.cols[col] |= 1 << value;
+        self.boxes[cell_box] |= 1 << value;
+
+        Ok(())
+    }
+
     pub fn solve(&mut self) -> Result<(), anyhow::Error> {
         //Err(SudokuError::Unsolvable.into())
-        self.check();
 
         Ok(())
     }
