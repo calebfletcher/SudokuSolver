@@ -66,37 +66,54 @@ impl Sudoku {
         Ok(3 * (row / 3) + col / 3)
     }
 
-    fn try_put_cell(&mut self, row: usize, col: usize, value: u32) -> Result<(), SudokuError> {
-        if value > 9 {
-            return Err(SudokuError::Invalid);
-        }
-
+    fn can_put_cell(&self, row: usize, col: usize, value: u32) -> bool {
         // Check row
         if self.rows[row] & 1 << value != 0 {
-            return Err(SudokuError::ConflictingCells);
+            return false;
         }
 
         // Check col
         if self.cols[col] & 1 << value != 0 {
-            return Err(SudokuError::ConflictingCells);
+            return false;
         }
 
         // Check box
-        let cell_box = Self::get_cell_box(row, col)?;
+        let cell_box = match Self::get_cell_box(row, col) {
+            Ok(cell_box) => cell_box,
+            Err(_) => return false,
+        };
         if self.boxes[cell_box] & 1 << value != 0 {
+            return false;
+        }
+
+        true
+    }
+
+    fn try_put_cell(&mut self, row: usize, col: usize, value: u32) -> Result<(), SudokuError> {
+        if value > 9 {
+            return Err(SudokuError::Invalid);
+        }
+        if !self.can_put_cell(row, col, value) {
             return Err(SudokuError::ConflictingCells);
         }
 
         self.cells[row][col] = value;
         self.rows[row] |= 1 << value;
         self.cols[col] |= 1 << value;
+
+        let cell_box = Self::get_cell_box(row, col)?;
         self.boxes[cell_box] |= 1 << value;
 
         Ok(())
     }
+    fn unset_cell(&mut self, row: usize, col: usize) -> Result<(), SudokuError> {
+        let value = self.cells[row][col];
+        let mask = !(1 << value);
 
-    pub fn solve(&mut self) -> Result<(), anyhow::Error> {
-        //Err(SudokuError::Unsolvable.into())
+        self.rows[row] &= mask;
+        self.cols[col] &= mask;
+        let cell_box = Self::get_cell_box(row, col)?;
+        self.boxes[cell_box] &= mask;
 
         Ok(())
     }
