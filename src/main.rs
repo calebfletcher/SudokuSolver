@@ -1,6 +1,6 @@
 use sudoku_solver::Sudoku;
 
-fn main() {
+fn main() -> Result<(), anyhow::Error> {
     println!("Solving Sudoku");
 
     let mut sudoku = Sudoku::new([
@@ -15,8 +15,9 @@ fn main() {
         [7, 0, 2, 0, 0, 0, 0, 0, 3],
     ]);
 
-    let solved_sudoku = sudoku.solve();
+    sudoku.solve()?;
 
     println!("Solved:");
-    sudoku.print()
+    sudoku.print();
+    Ok(())
 }

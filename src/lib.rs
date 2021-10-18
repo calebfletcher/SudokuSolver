@@ -16,8 +16,37 @@ impl Sudoku {
         Self { cells }
     }
 
-    pub fn solve(self: &mut Self) -> Result<(), anyhow::Error> {
+    pub fn solve(&mut self) -> Result<(), anyhow::Error> {
+        //Err(SudokuError::Unsolvable.into())
+
         Ok(())
     }
-    pub fn print(self: &Self) {}
+    pub fn print(self) {
+        for row in 0..9 {
+            // Print horizontal separator
+            if row % 3 == 0 && row != 0 {
+                println!("------+-------+------");
+            }
+
+            for col in 0..9 {
+                // Print vertical separator
+                if col % 3 == 0 && col != 0 {
+                    print!("| ");
+                }
+
+                // Print cell
+                if self.cells[row][col] == 0 {
+                    print!(" ");
+                } else {
+                    print!("{}", self.cells[row][col]);
+                }
+
+                // Print space separator
+                if col < 8 {
+                    print!(" ");
+                }
+            }
+            println!();
+        }
+    }
 }
