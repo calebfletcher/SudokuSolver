@@ -118,14 +118,33 @@ impl Sudoku {
         Ok(())
     }
 
-    fn check(&self) -> bool {
-        // Check rows
+    pub fn solve(&mut self) -> Result<(), SudokuError> {
+        for row in 0..9 {
+            for col in 0..9 {
+                // Check if cell is already filled
+                if self.cells[row][col] != 0 {
+                    continue;
+                }
 
-        // Check cols
-
-        // Check boxes
-
-        true
+                // Try each value in turn
+                for value in 1..10 {
+                    // If value can go in cell
+                    if self.try_put_cell(row, col, value).is_ok() {
+                        match self.solve() {
+                            Ok(_) => {
+                                return Ok(());
+                            }
+                            Err(_) => {
+                                self.unset_cell(row, col)?;
+                            }
+                        }
+                    }
+                }
+                // All values were tried, and none of them worked
+                return Err(SudokuError::Unsolvable);
+            }
+        }
+        Ok(())
     }
 
     pub fn print(&self) {
