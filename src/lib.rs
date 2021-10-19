@@ -12,7 +12,7 @@ pub enum SudokuError {
     ConflictingCells,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Sudoku {
     cells: [[u32; 9]; 9],
     rows: [u32; 9],
@@ -31,7 +31,7 @@ impl Sudoku {
             for col in 0..9 {
                 let cell = cells[row][col];
 
-                // Check for invalid cells
+                // Check for cells with values that are too high
                 if cell > 9 {
                     return Err(SudokuError::Invalid);
                 }
@@ -43,10 +43,16 @@ impl Sudoku {
 
                 let cell_box = Self::get_cell_box(row, col)?;
 
+                let mask = 1 << cell;
+                // Check if cell is valid compared to the rest of the grid
+                if (rows[row] | cols[col] | boxes[cell_box]) & mask != 0 {
+                    return Err(SudokuError::Invalid);
+                }
+
                 // Update map of values
-                rows[row] |= 1 << cell;
-                cols[col] |= 1 << cell;
-                boxes[cell_box] |= 1 << cell;
+                rows[row] |= mask;
+                cols[col] |= mask;
+                boxes[cell_box] |= mask;
             }
         }
 
